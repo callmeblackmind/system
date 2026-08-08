@@ -47,7 +47,7 @@ async function askMistral(message) {
   const data = await response.json();
 
   if (!response.ok) {
-    console.error(data);
+    console.error("Mistral API error:", JSON.stringify(data));
     throw new Error(
       typeof data.error === "string" ? data.error : "خطا در ارتباط با Mistral"
     );
@@ -89,7 +89,6 @@ app.post("/telegram-webhook", async (req, res) => {
   // Acknowledge Telegram immediately so it doesn't retry the update
   res.sendStatus(200);
 
-
   console.log("Incoming Telegram update:", JSON.stringify(req.body));
 
   if (!TELEGRAM_API) {
@@ -129,14 +128,26 @@ async function sendTelegramMessage(chatId, text) {
   const chunks = text.match(/[\s\S]{1,4000}/g) || [text];
 
   for (const chunk of chunks) {
-    await fetch(`${TELEGRAM_API}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: chunk
-      })
-    });
+    try {
+      const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: chunk
+        })
+      });
+
+      const result = await response.json();
+      console.log("Telegram sendMessage result:", JSON.stringify(result));
+
+      if (!result.ok) {
+        console.error("Telegram sendMessage FAILED:", JSON.stringify(result));
+      }
+
+    } catch (error) {
+      console.error("Telegram sendMessage request crashed:", error);
+    }
   }
 }
 
