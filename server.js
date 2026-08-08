@@ -89,6 +89,9 @@ app.post("/telegram-webhook", async (req, res) => {
   // Acknowledge Telegram immediately so it doesn't retry the update
   res.sendStatus(200);
 
+
+  console.log("Incoming Telegram update:", JSON.stringify(req.body));
+
   if (!TELEGRAM_API) {
     console.error("TELEGRAM_BOT_TOKEN is not set");
     return;
